@@ -1161,6 +1161,7 @@ namespace Org.BouncyCastle.Tls
                 TlsUtilities.WriteUint16(ciphertextLength, encoded.buf, encoded.off + (recordHeaderLength - 2));
 
                 SendDatagram(m_transport, encoded.buf, encoded.off, encoded.len);
+                encoded.Dispose();
             }
         }
 

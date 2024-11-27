@@ -277,10 +277,18 @@ namespace Org.BouncyCastle.Utilities.IO
             CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
+#if NETSTANDARD2_1_OR_GREATER
+                return ValueTaskExtension.FromCanceled(cancellationToken);
+#else
                 return ValueTask.FromCanceled(cancellationToken);
+#endif
 
             destination.Write(buffer.Span);
+#if NETSTANDARD2_1_OR_GREATER
+            return ValueTaskExtension.CompletedTask();
+#else
             return ValueTask.CompletedTask;
+#endif
         }
 #endif
 

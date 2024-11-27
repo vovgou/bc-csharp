@@ -6,6 +6,9 @@ using System.Runtime.ExceptionServices;
 using Org.BouncyCastle.Tls.Crypto;
 using Org.BouncyCastle.Tls.Crypto.Impl;
 using Org.BouncyCastle.Utilities;
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+using System.Buffers;
+#endif
 
 namespace Org.BouncyCastle.Tls
 {
@@ -314,6 +317,7 @@ namespace Org.BouncyCastle.Tls
             //}
 
             m_output.Flush();
+            encoded.Dispose();
 #endif
         }
 
@@ -340,27 +344,29 @@ namespace Org.BouncyCastle.Tls
             long seqNo = m_writeSeqNo.NextValue(AlertDescription.internal_error);
             ProtocolVersion recordVersion = m_writeVersion;
 
-            TlsEncodeResult encoded = m_writeCipher.EncodePlaintext(seqNo, contentType, recordVersion,
-                RecordFormat.FragmentOffset, plaintext);
+            using (TlsEncodeResult encoded = m_writeCipher.EncodePlaintext(seqNo, contentType, recordVersion,
+                RecordFormat.FragmentOffset, plaintext))
+            {
 
-            int ciphertextLength = encoded.len - RecordFormat.FragmentOffset;
-            TlsUtilities.CheckUint16(ciphertextLength);
+                int ciphertextLength = encoded.len - RecordFormat.FragmentOffset;
+                TlsUtilities.CheckUint16(ciphertextLength);
 
-            TlsUtilities.WriteUint8(encoded.recordType, encoded.buf, encoded.off + RecordFormat.TypeOffset);
-            TlsUtilities.WriteVersion(recordVersion, encoded.buf, encoded.off + RecordFormat.VersionOffset);
-            TlsUtilities.WriteUint16(ciphertextLength, encoded.buf, encoded.off + RecordFormat.LengthOffset);
+                TlsUtilities.WriteUint8(encoded.recordType, encoded.buf, encoded.off + RecordFormat.TypeOffset);
+                TlsUtilities.WriteVersion(recordVersion, encoded.buf, encoded.off + RecordFormat.VersionOffset);
+                TlsUtilities.WriteUint16(ciphertextLength, encoded.buf, encoded.off + RecordFormat.LengthOffset);
 
-            // TODO[tls-port] Can we support interrupted IO on .NET?
-            //try
-            //{
+                // TODO[tls-port] Can we support interrupted IO on .NET?
+                //try
+                //{
                 m_output.Write(encoded.buf, encoded.off, encoded.len);
-            //}
-            //catch (InterruptedIOException e)
-            //{
-            //    throw new TlsFatalAlert(AlertDescription.internal_error, e);
-            //}
+                //}
+                //catch (InterruptedIOException e)
+                //{
+                //    throw new TlsFatalAlert(AlertDescription.internal_error, e);
+                //}
 
-            m_output.Flush();
+                m_output.Flush();
+            }
         }
 #endif
 
@@ -476,7 +482,6 @@ namespace Org.BouncyCastle.Tls
 
             internal volatile byte[] m_buf;
             internal volatile int m_pos;
-
             internal Record()
             {
                 this.m_buf = m_header;
@@ -541,6 +546,10 @@ namespace Org.BouncyCastle.Tls
 
             internal void Reset()
             {
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                if(m_buf != m_header)
+                    ArrayPool<byte>.Shared.Return(m_buf);
+#endif
                 m_buf = m_header;
                 m_pos = 0;
             }
@@ -549,11 +558,27 @@ namespace Org.BouncyCastle.Tls
             {
                 if (m_buf.Length < length)
                 {
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                    byte[] tmp = ArrayPool<byte>.Shared.Rent(length);
+                    Array.Copy(m_buf, 0, tmp, 0, m_pos);
+                    m_buf = tmp;
+#else
                     byte[] tmp = new byte[length];
                     Array.Copy(m_buf, 0, tmp, 0, m_pos);
                     m_buf = tmp;
+#endif
                 }
             }
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+            ~Record()
+            {
+                if (m_buf != m_header)
+                {
+                    ArrayPool<byte>.Shared.Return(m_buf);
+                    m_buf = null;
+                }
+            }
+#endif
         }
 
         private sealed class SequenceNumber

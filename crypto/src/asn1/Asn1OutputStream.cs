@@ -116,12 +116,27 @@ namespace Org.BouncyCastle.Asn1
                 return;
             }
 
-#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NETCOREAPP2_1_OR_GREATER
             Span<byte> encoding = stackalloc byte[5];
             BinaryPrimitives.WriteUInt32BigEndian(encoding[1..], (uint)dl);
             int leadingZeroBytes = BitOperations.LeadingZeroCount((uint)dl) / 8;
             encoding[leadingZeroBytes] = (byte)(0x84 - leadingZeroBytes);
             Write(encoding[leadingZeroBytes..]);
+#elif NETSTANDARD2_1_OR_GREATER
+            Span<byte> stack = stackalloc byte[5];
+            int pos = stack.Length;
+
+            do
+            {
+                stack[--pos] = (byte)dl;
+                dl >>= 8;
+            }
+            while (dl > 0);
+
+            int count = stack.Length - pos;
+            stack[--pos] = (byte)(0x80 | count);
+
+            Write(stack.Slice(pos, count + 1));
 #else
             byte[] stack = new byte[5];
             int pos = stack.Length;

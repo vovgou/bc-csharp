@@ -253,7 +253,11 @@ namespace Org.BouncyCastle.Crypto.IO
             if (!buffer.IsEmpty)
             {
                 if (cancellationToken.IsCancellationRequested)
+#if NETSTANDARD2_1_OR_GREATER
+                    return ValueTaskExtension.FromCanceled(cancellationToken);
+#else
                     return ValueTask.FromCanceled(cancellationToken);
+#endif
 
                 int outputSize = m_writeCipher.GetUpdateOutputSize(buffer.Length);
 
@@ -266,8 +270,11 @@ namespace Org.BouncyCastle.Crypto.IO
                     return Streams.WriteAsyncCompletion(writeTask, localBuffer: output);
                 }
             }
-
+#if NETSTANDARD2_1_OR_GREATER
+            return ValueTaskExtension.CompletedTask();
+#else
             return ValueTask.CompletedTask;
+#endif
         }
 #endif
 

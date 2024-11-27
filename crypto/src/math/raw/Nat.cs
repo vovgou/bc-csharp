@@ -2857,6 +2857,7 @@ namespace Org.BouncyCastle.Math.Raw
         public static void Xor64(int len, ReadOnlySpan<ulong> x, ulong y, Span<ulong> z)
         {
             int i = 0;
+#if NETCOREAPP2_1_OR_GREATER
             if (Vector.IsHardwareAccelerated)
             {
                 var vy = new Vector<ulong>(y);
@@ -2870,6 +2871,7 @@ namespace Org.BouncyCastle.Math.Raw
                 }
             }
             else
+#endif
             {
                 int limit = len - 4;
                 while (i <= limit)
@@ -2889,7 +2891,7 @@ namespace Org.BouncyCastle.Math.Raw
         }
 #endif
 
-        public static void Xor64(int len, ulong[] x, ulong[] y, ulong[] z)
+            public static void Xor64(int len, ulong[] x, ulong[] y, ulong[] z)
         {
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
             Xor64(len, x.AsSpan(0, len), y.AsSpan(0, len), z.AsSpan(0, len));

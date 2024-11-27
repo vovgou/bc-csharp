@@ -30,6 +30,7 @@ namespace Org.BouncyCastle.Tls.Crypto.Impl
 
         protected readonly bool m_isTlsV13;
         protected readonly int m_nonceMode;
+        protected byte[] nonce;
 
         /// <exception cref="IOException"/>
         public TlsAeadCipher(TlsCryptoParameters cryptoParams, TlsAeadCipherImpl encryptCipher,
@@ -286,7 +287,9 @@ namespace Org.BouncyCastle.Tls.Crypto.Impl
             int encryptionLength = m_encryptCipher.GetOutputSize(innerPlaintextLength);
             int ciphertextLength = m_record_iv_length + encryptionLength;
 
-            byte[] output = new byte[headerAllocation + ciphertextLength];
+            //byte[] output = new byte[headerAllocation + ciphertextLength];
+            int outputLength = headerAllocation + ciphertextLength;
+            byte[] output = System.Buffers.ArrayPool<byte>.Shared.Rent(outputLength);
             int outputPos = headerAllocation;
 
             if (m_record_iv_length != 0)
@@ -324,13 +327,13 @@ namespace Org.BouncyCastle.Tls.Crypto.Impl
                 throw new TlsFatalAlert(AlertDescription.internal_error, e);
             }
 
-            if (outputPos != output.Length)
+            if (outputPos != outputLength)
             {
                 // NOTE: The additional data mechanism for AEAD ciphers requires exact output size prediction.
                 throw new TlsFatalAlert(AlertDescription.internal_error);
             }
 
-            return new TlsEncodeResult(output, 0, output.Length, recordType);
+            return new TlsEncodeResult(output, 0, outputLength, recordType,true);
         }
 #endif
 
@@ -340,7 +343,11 @@ namespace Org.BouncyCastle.Tls.Crypto.Impl
             if (GetPlaintextDecodeLimit(ciphertextLength) < 0)
                 throw new TlsFatalAlert(AlertDescription.decode_error);
 
-            byte[] nonce = new byte[m_decryptNonce.Length + m_record_iv_length];
+            //byte[] nonce = new byte[m_decryptNonce.Length + m_record_iv_length];
+            int nonceLen = m_decryptNonce.Length + m_record_iv_length;
+            if (nonce == null || nonce.Length != nonceLen)
+                nonce = new byte[nonceLen];
+            Array.Clear(nonce, 0, nonceLen);
 
             switch (m_nonceMode)
             {

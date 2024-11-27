@@ -282,13 +282,154 @@ namespace Org.BouncyCastle.Crypto.Engines
                 | (((uint)S[(x>>24)&255]) << 24);
         }
 
-        /**
-        * Calculate the necessary round keys
-        * The number of calculations depends on key size and block size
-        * AES specified a fixed block size of 128 bits and key sizes 128/192/256 bits
-        * This code is written assuming those are the only possible values
-        */
-        private uint[][] GenerateWorkingKey(KeyParameter keyParameter, bool forEncryption)
+//        /**
+//        * Calculate the necessary round keys
+//        * The number of calculations depends on key size and block size
+//        * AES specified a fixed block size of 128 bits and key sizes 128/192/256 bits
+//        * This code is written assuming those are the only possible values
+//        */
+//        private uint[][] GenerateWorkingKey(KeyParameter keyParameter, bool forEncryption)
+//        {
+//#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+//            var key = keyParameter.Key;
+//#else
+//            byte[] key = keyParameter.GetKey();
+//#endif
+
+//            int keyLen = key.Length;
+//            if (keyLen < 16 || keyLen > 32 || (keyLen & 7) != 0)
+//                throw new ArgumentException("Key length not 128/192/256 bits.");
+
+//            int KC = keyLen >> 2;
+//            this.ROUNDS = KC + 6;  // This is not always true for the generalized Rijndael that allows larger block sizes
+
+//            uint[][] W = new uint[ROUNDS + 1][]; // 4 words in a block
+//            for (int i = 0; i <= ROUNDS; ++i)
+//            {
+//                W[i] = new uint[4];
+//            }
+
+//            switch (KC)
+//            {
+//                case 4:
+//                {
+//                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
+//                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
+//                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
+//                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
+
+//                    for (int i = 1; i <= 10; ++i)
+//                    {
+//                        uint u = SubWord(Shift(t3, 8)) ^ rcon[i - 1];
+//                        t0 ^= u;  W[i][0] = t0;
+//                        t1 ^= t0; W[i][1] = t1;
+//                        t2 ^= t1; W[i][2] = t2;
+//                        t3 ^= t2; W[i][3] = t3;
+//                    }
+
+//                    break;
+//                }
+//                case 6:
+//                {
+//                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
+//                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
+//                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
+//                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
+//                    uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
+//                    uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
+
+//                    uint rcon = 1;
+//                    uint u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+//                    t0 ^= u;  W[1][2] = t0;
+//                    t1 ^= t0; W[1][3] = t1;
+//                    t2 ^= t1; W[2][0] = t2;
+//                    t3 ^= t2; W[2][1] = t3;
+//                    t4 ^= t3; W[2][2] = t4;
+//                    t5 ^= t4; W[2][3] = t5;
+
+//                    for (int i = 3; i < 12; i += 3)
+//                    {
+//                        u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+//                        t0 ^= u;  W[i    ][0] = t0;
+//                        t1 ^= t0; W[i    ][1] = t1;
+//                        t2 ^= t1; W[i    ][2] = t2;
+//                        t3 ^= t2; W[i    ][3] = t3;
+//                        t4 ^= t3; W[i + 1][0] = t4;
+//                        t5 ^= t4; W[i + 1][1] = t5;
+//                        u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+//                        t0 ^= u;  W[i + 1][2] = t0;
+//                        t1 ^= t0; W[i + 1][3] = t1;
+//                        t2 ^= t1; W[i + 2][0] = t2;
+//                        t3 ^= t2; W[i + 2][1] = t3;
+//                        t4 ^= t3; W[i + 2][2] = t4;
+//                        t5 ^= t4; W[i + 2][3] = t5;
+//                    }
+
+//                    u = SubWord(Shift(t5, 8)) ^ rcon;
+//                    t0 ^= u;  W[12][0] = t0;
+//                    t1 ^= t0; W[12][1] = t1;
+//                    t2 ^= t1; W[12][2] = t2;
+//                    t3 ^= t2; W[12][3] = t3;
+
+//                    break;
+//                }
+//                case 8:
+//                {
+//                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
+//                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
+//                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
+//                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
+//                    uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
+//                    uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
+//                    uint t6 = Pack.LE_To_UInt32(key, 24); W[1][2] = t6;
+//                    uint t7 = Pack.LE_To_UInt32(key, 28); W[1][3] = t7;
+
+//                    uint u, rcon = 1;
+
+//                    for (int i = 2; i < 14; i += 2)
+//                    {
+//                        u = SubWord(Shift(t7, 8)) ^ rcon; rcon <<= 1;
+//                        t0 ^= u;  W[i    ][0] = t0;
+//                        t1 ^= t0; W[i    ][1] = t1;
+//                        t2 ^= t1; W[i    ][2] = t2;
+//                        t3 ^= t2; W[i    ][3] = t3;
+//                        u = SubWord(t3);
+//                        t4 ^= u;  W[i + 1][0] = t4;
+//                        t5 ^= t4; W[i + 1][1] = t5;
+//                        t6 ^= t5; W[i + 1][2] = t6;
+//                        t7 ^= t6; W[i + 1][3] = t7;
+//                    }
+
+//                    u = SubWord(Shift(t7, 8)) ^ rcon;
+//                    t0 ^= u;  W[14][0] = t0;
+//                    t1 ^= t0; W[14][1] = t1;
+//                    t2 ^= t1; W[14][2] = t2;
+//                    t3 ^= t2; W[14][3] = t3;
+
+//                    break;
+//                }
+//                default:
+//                {
+//                    throw new InvalidOperationException("Should never get here");
+//                }
+//            }
+
+//            if (!forEncryption)
+//            {
+//                for (int j = 1; j < ROUNDS; j++)
+//                {
+//                    uint[] w = W[j];
+//                    for (int i = 0; i < 4; i++)
+//                    {
+//                        w[i] = Inv_Mcol(w[i]);
+//                    }
+//                }
+//            }
+
+//            return W;
+//        }
+
+        private void GenerateWorkingKey(KeyParameter keyParameter, bool forEncryption)
         {
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
             var key = keyParameter.Key;
@@ -300,118 +441,124 @@ namespace Org.BouncyCastle.Crypto.Engines
             if (keyLen < 16 || keyLen > 32 || (keyLen & 7) != 0)
                 throw new ArgumentException("Key length not 128/192/256 bits.");
 
+            int oldRounds = this.ROUNDS;
+
             int KC = keyLen >> 2;
             this.ROUNDS = KC + 6;  // This is not always true for the generalized Rijndael that allows larger block sizes
-
-            uint[][] W = new uint[ROUNDS + 1][]; // 4 words in a block
-            for (int i = 0; i <= ROUNDS; ++i)
+                      
+            if (this.ROUNDS != oldRounds)
             {
-                W[i] = new uint[4];
+                this.WorkingKey = new uint[ROUNDS + 1][]; // 4 words in a block
+                for (int i = 0; i <= ROUNDS; ++i)
+                {
+                    WorkingKey[i] = new uint[4];
+                }
             }
+            uint[][] W = WorkingKey;
 
             switch (KC)
             {
                 case 4:
-                {
-                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
-                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
-                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
-                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
-
-                    for (int i = 1; i <= 10; ++i)
                     {
-                        uint u = SubWord(Shift(t3, 8)) ^ rcon[i - 1];
-                        t0 ^= u;  W[i][0] = t0;
-                        t1 ^= t0; W[i][1] = t1;
-                        t2 ^= t1; W[i][2] = t2;
-                        t3 ^= t2; W[i][3] = t3;
-                    }
+                        uint t0 = Pack.LE_To_UInt32(key, 0); W[0][0] = t0;
+                        uint t1 = Pack.LE_To_UInt32(key, 4); W[0][1] = t1;
+                        uint t2 = Pack.LE_To_UInt32(key, 8); W[0][2] = t2;
+                        uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
 
-                    break;
-                }
+                        for (int i = 1; i <= 10; ++i)
+                        {
+                            uint u = SubWord(Shift(t3, 8)) ^ rcon[i - 1];
+                            t0 ^= u; W[i][0] = t0;
+                            t1 ^= t0; W[i][1] = t1;
+                            t2 ^= t1; W[i][2] = t2;
+                            t3 ^= t2; W[i][3] = t3;
+                        }
+
+                        break;
+                    }
                 case 6:
-                {
-                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
-                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
-                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
-                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
-                    uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
-                    uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
-
-                    uint rcon = 1;
-                    uint u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
-                    t0 ^= u;  W[1][2] = t0;
-                    t1 ^= t0; W[1][3] = t1;
-                    t2 ^= t1; W[2][0] = t2;
-                    t3 ^= t2; W[2][1] = t3;
-                    t4 ^= t3; W[2][2] = t4;
-                    t5 ^= t4; W[2][3] = t5;
-
-                    for (int i = 3; i < 12; i += 3)
                     {
-                        u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
-                        t0 ^= u;  W[i    ][0] = t0;
-                        t1 ^= t0; W[i    ][1] = t1;
-                        t2 ^= t1; W[i    ][2] = t2;
-                        t3 ^= t2; W[i    ][3] = t3;
-                        t4 ^= t3; W[i + 1][0] = t4;
-                        t5 ^= t4; W[i + 1][1] = t5;
-                        u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
-                        t0 ^= u;  W[i + 1][2] = t0;
-                        t1 ^= t0; W[i + 1][3] = t1;
-                        t2 ^= t1; W[i + 2][0] = t2;
-                        t3 ^= t2; W[i + 2][1] = t3;
-                        t4 ^= t3; W[i + 2][2] = t4;
-                        t5 ^= t4; W[i + 2][3] = t5;
+                        uint t0 = Pack.LE_To_UInt32(key, 0); W[0][0] = t0;
+                        uint t1 = Pack.LE_To_UInt32(key, 4); W[0][1] = t1;
+                        uint t2 = Pack.LE_To_UInt32(key, 8); W[0][2] = t2;
+                        uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
+                        uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
+                        uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
+
+                        uint rcon = 1;
+                        uint u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+                        t0 ^= u; W[1][2] = t0;
+                        t1 ^= t0; W[1][3] = t1;
+                        t2 ^= t1; W[2][0] = t2;
+                        t3 ^= t2; W[2][1] = t3;
+                        t4 ^= t3; W[2][2] = t4;
+                        t5 ^= t4; W[2][3] = t5;
+
+                        for (int i = 3; i < 12; i += 3)
+                        {
+                            u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+                            t0 ^= u; W[i][0] = t0;
+                            t1 ^= t0; W[i][1] = t1;
+                            t2 ^= t1; W[i][2] = t2;
+                            t3 ^= t2; W[i][3] = t3;
+                            t4 ^= t3; W[i + 1][0] = t4;
+                            t5 ^= t4; W[i + 1][1] = t5;
+                            u = SubWord(Shift(t5, 8)) ^ rcon; rcon <<= 1;
+                            t0 ^= u; W[i + 1][2] = t0;
+                            t1 ^= t0; W[i + 1][3] = t1;
+                            t2 ^= t1; W[i + 2][0] = t2;
+                            t3 ^= t2; W[i + 2][1] = t3;
+                            t4 ^= t3; W[i + 2][2] = t4;
+                            t5 ^= t4; W[i + 2][3] = t5;
+                        }
+
+                        u = SubWord(Shift(t5, 8)) ^ rcon;
+                        t0 ^= u; W[12][0] = t0;
+                        t1 ^= t0; W[12][1] = t1;
+                        t2 ^= t1; W[12][2] = t2;
+                        t3 ^= t2; W[12][3] = t3;
+
+                        break;
                     }
-
-                    u = SubWord(Shift(t5, 8)) ^ rcon;
-                    t0 ^= u;  W[12][0] = t0;
-                    t1 ^= t0; W[12][1] = t1;
-                    t2 ^= t1; W[12][2] = t2;
-                    t3 ^= t2; W[12][3] = t3;
-
-                    break;
-                }
                 case 8:
-                {
-                    uint t0 = Pack.LE_To_UInt32(key,  0); W[0][0] = t0;
-                    uint t1 = Pack.LE_To_UInt32(key,  4); W[0][1] = t1;
-                    uint t2 = Pack.LE_To_UInt32(key,  8); W[0][2] = t2;
-                    uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
-                    uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
-                    uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
-                    uint t6 = Pack.LE_To_UInt32(key, 24); W[1][2] = t6;
-                    uint t7 = Pack.LE_To_UInt32(key, 28); W[1][3] = t7;
-
-                    uint u, rcon = 1;
-
-                    for (int i = 2; i < 14; i += 2)
                     {
-                        u = SubWord(Shift(t7, 8)) ^ rcon; rcon <<= 1;
-                        t0 ^= u;  W[i    ][0] = t0;
-                        t1 ^= t0; W[i    ][1] = t1;
-                        t2 ^= t1; W[i    ][2] = t2;
-                        t3 ^= t2; W[i    ][3] = t3;
-                        u = SubWord(t3);
-                        t4 ^= u;  W[i + 1][0] = t4;
-                        t5 ^= t4; W[i + 1][1] = t5;
-                        t6 ^= t5; W[i + 1][2] = t6;
-                        t7 ^= t6; W[i + 1][3] = t7;
+                        uint t0 = Pack.LE_To_UInt32(key, 0); W[0][0] = t0;
+                        uint t1 = Pack.LE_To_UInt32(key, 4); W[0][1] = t1;
+                        uint t2 = Pack.LE_To_UInt32(key, 8); W[0][2] = t2;
+                        uint t3 = Pack.LE_To_UInt32(key, 12); W[0][3] = t3;
+                        uint t4 = Pack.LE_To_UInt32(key, 16); W[1][0] = t4;
+                        uint t5 = Pack.LE_To_UInt32(key, 20); W[1][1] = t5;
+                        uint t6 = Pack.LE_To_UInt32(key, 24); W[1][2] = t6;
+                        uint t7 = Pack.LE_To_UInt32(key, 28); W[1][3] = t7;
+
+                        uint u, rcon = 1;
+
+                        for (int i = 2; i < 14; i += 2)
+                        {
+                            u = SubWord(Shift(t7, 8)) ^ rcon; rcon <<= 1;
+                            t0 ^= u; W[i][0] = t0;
+                            t1 ^= t0; W[i][1] = t1;
+                            t2 ^= t1; W[i][2] = t2;
+                            t3 ^= t2; W[i][3] = t3;
+                            u = SubWord(t3);
+                            t4 ^= u; W[i + 1][0] = t4;
+                            t5 ^= t4; W[i + 1][1] = t5;
+                            t6 ^= t5; W[i + 1][2] = t6;
+                            t7 ^= t6; W[i + 1][3] = t7;
+                        }
+
+                        u = SubWord(Shift(t7, 8)) ^ rcon;
+                        t0 ^= u; W[14][0] = t0;
+                        t1 ^= t0; W[14][1] = t1;
+                        t2 ^= t1; W[14][2] = t2;
+                        t3 ^= t2; W[14][3] = t3;
+
+                        break;
                     }
-
-                    u = SubWord(Shift(t7, 8)) ^ rcon;
-                    t0 ^= u;  W[14][0] = t0;
-                    t1 ^= t0; W[14][1] = t1;
-                    t2 ^= t1; W[14][2] = t2;
-                    t3 ^= t2; W[14][3] = t3;
-
-                    break;
-                }
                 default:
-                {
-                    throw new InvalidOperationException("Should never get here");
-                }
+                    {
+                        throw new InvalidOperationException("Should never get here");
+                    }
             }
 
             if (!forEncryption)
@@ -425,8 +572,6 @@ namespace Org.BouncyCastle.Crypto.Engines
                     }
                 }
             }
-
-            return W;
         }
 
         private int ROUNDS;
@@ -458,10 +603,11 @@ namespace Org.BouncyCastle.Crypto.Engines
                 throw new ArgumentException("invalid parameter passed to AES init - "
                     + Platform.GetTypeName(parameters));
 
-            WorkingKey = GenerateWorkingKey(keyParameter, forEncryption);
+            GenerateWorkingKey(keyParameter, forEncryption);
 
             this.forEncryption = forEncryption;
-            this.s = Arrays.Clone(forEncryption ? S : Si);
+            //this.s = Arrays.Clone(forEncryption ? S : Si);
+            this.s = forEncryption ? S : Si;
         }
 
         public string AlgorithmName

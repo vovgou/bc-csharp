@@ -166,7 +166,11 @@ namespace Org.BouncyCastle.Crypto.IO
                 if (!buffer.IsEmpty)
                 {
                     if (cancellationToken.IsCancellationRequested)
+#if NETSTANDARD2_1_OR_GREATER
+                        return ValueTaskExtension.FromCanceled(cancellationToken);
+#else
                         return ValueTask.FromCanceled(cancellationToken);
+#endif
 
                     m_writeDigest.BlockUpdate(buffer.Span);
                 }

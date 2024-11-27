@@ -39,6 +39,7 @@ namespace Org.BouncyCastle.Utilities
         public static void Xor(int len, ReadOnlySpan<byte> x, ReadOnlySpan<byte> y, Span<byte> z)
         {
             int i = 0;
+#if NETCOREAPP2_1_OR_GREATER
             if (Vector.IsHardwareAccelerated)
             {
                 int limit = len - Vector<byte>.Count;
@@ -50,6 +51,7 @@ namespace Org.BouncyCastle.Utilities
                     i += Vector<byte>.Count;
                 }
             }
+#endif
             {
                 int limit = len - 8;
                 while (i <= limit)
@@ -71,7 +73,7 @@ namespace Org.BouncyCastle.Utilities
         }
 #endif
 
-        public static void XorTo(int len, byte[] x, byte[] z)
+            public static void XorTo(int len, byte[] x, byte[] z)
         {
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
             XorTo(len, x.AsSpan(0, len), z.AsSpan(0, len));
@@ -99,6 +101,7 @@ namespace Org.BouncyCastle.Utilities
         public static void XorTo(int len, ReadOnlySpan<byte> x, Span<byte> z)
         {
             int i = 0;
+#if NETCOREAPP2_1_OR_GREATER
             if (Vector.IsHardwareAccelerated)
             {
                 int limit = len - Vector<byte>.Count;
@@ -110,6 +113,7 @@ namespace Org.BouncyCastle.Utilities
                     i += Vector<byte>.Count;
                 }
             }
+#endif
             {
                 int limit = len - 8;
                 while (i <= limit)
@@ -130,5 +134,5 @@ namespace Org.BouncyCastle.Utilities
             }
         }
 #endif
+        }
     }
-}

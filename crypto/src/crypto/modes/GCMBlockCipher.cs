@@ -1,4 +1,6 @@
 using System;
+using System.Data.Common;
+
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
@@ -112,6 +114,153 @@ namespace Org.BouncyCastle.Crypto.Modes
         /// MAC sizes from 32 bits to 128 bits (must be a multiple of 8) are supported. The default is 128 bits.
         /// Sizes less than 96 are not recommended, but are supported for specialized applications.
         /// </remarks>
+        //        public void Init(bool forEncryption, ICipherParameters parameters)
+        //        {
+        //            this.forEncryption = forEncryption;
+        //            this.macBlock = null;
+        //            this.initialised = true;
+
+        //            KeyParameter keyParam;
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //            ReadOnlySpan<byte> newNonce;
+        //#else
+        //            byte[] newNonce;
+        //#endif
+
+        //            if (parameters is AeadParameters aeadParameters)
+        //            {
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //                newNonce = aeadParameters.Nonce;
+        //#else
+        //                newNonce = aeadParameters.GetNonce();
+        //#endif
+        //                initialAssociatedText = aeadParameters.GetAssociatedText();
+
+        //                int macSizeBits = aeadParameters.MacSize;
+        //                if (macSizeBits < 32 || macSizeBits > 128 || macSizeBits % 8 != 0)
+        //                    throw new ArgumentException("Invalid value for MAC size: " + macSizeBits);
+
+        //                macSize = macSizeBits / 8;
+        //                keyParam = aeadParameters.Key;
+        //            }
+        //            else if (parameters is ParametersWithIV withIV)
+        //            {
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //                newNonce = withIV.IV;
+        //#else
+        //                newNonce = withIV.GetIV();
+        //#endif
+        //                initialAssociatedText = null;
+        //                macSize = 16;
+        //                keyParam = (KeyParameter)withIV.Parameters;
+        //            }
+        //            else
+        //            {
+        //                throw new ArgumentException("invalid parameters passed to GCM");
+        //            }
+
+        //            int bufLength = forEncryption ? BlockSize : (BlockSize + macSize);
+        //            this.bufBlock = new byte[bufLength];
+
+        //            if (newNonce.Length < 1)
+        //                throw new ArgumentException("IV must be at least 1 byte");
+
+        //            if (forEncryption)
+        //            {
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //                if (nonce != null && newNonce.SequenceEqual(nonce))
+        //#else
+        //                if (nonce != null && Arrays.AreEqual(nonce, newNonce))
+        //#endif
+        //                {
+        //                    if (keyParam == null)
+        //                        throw new ArgumentException("cannot reuse nonce for GCM encryption");
+
+        //                    if (lastKey != null && keyParam.FixedTimeEquals(lastKey))
+        //                        throw new ArgumentException("cannot reuse nonce for GCM encryption");
+        //                }
+        //            }
+
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //            nonce = newNonce.ToArray();
+        //#else
+        //            nonce = newNonce;
+        //#endif
+        //            if (keyParam != null)
+        //            {
+        //                lastKey = keyParam.GetKey();
+        //            }
+
+        //            // TODO Restrict macSize to 16 if nonce length not 12?
+
+        //            // Cipher always used in forward mode
+        //            // if keyParam is null we're reusing the last key.
+        //            if (keyParam != null)
+        //            {
+        //                cipher.Init(true, keyParam);
+
+        //                this.H = new byte[BlockSize];
+        //                cipher.ProcessBlock(H, 0, H, 0);
+
+        //                // if keyParam is null we're reusing the last key and the multiplier doesn't need re-init
+        //                multiplier.Init(H);
+        //                exp = null;
+
+        //#if NETCOREAPP3_0_OR_GREATER
+        //                if (IsFourWaySupported)
+        //                {
+        //                    var H1 = GcmUtilities.Load(H);
+        //                    var H2 = GcmUtilities.Square(H1);
+        //                    var H3 = GcmUtilities.Multiply(H1, H2);
+        //                    var H4 = GcmUtilities.Square(H2);
+
+        //                    HPow = new Vector128<ulong>[4]{ H4, H3, H2, H1 };
+        //                }
+        //#endif
+        //            }
+        //            else if (this.H == null)
+        //            {
+        //                throw new ArgumentException("Key must be specified in initial Init");
+        //            }
+
+        //            this.J0 = new byte[BlockSize];
+
+        //            if (nonce.Length == 12)
+        //            {
+        //                Array.Copy(nonce, 0, J0, 0, nonce.Length);
+        //                this.J0[BlockSize - 1] = 0x01;
+        //            }
+        //            else
+        //            {
+        //                gHASH(J0, nonce, nonce.Length);
+        //                byte[] X = new byte[BlockSize];
+        //                Pack.UInt64_To_BE((ulong)nonce.Length * 8UL, X, 8);
+        //                gHASHBlock(J0, X);
+        //            }
+
+        //            this.S = new byte[BlockSize];
+        //            this.S_at = new byte[BlockSize];
+        //            this.S_atPre = new byte[BlockSize];
+        //            this.atBlock = new byte[BlockSize];
+        //            this.atBlockPos = 0;
+        //            this.atLength = 0;
+        //            this.atLengthPre = 0;
+        //            this.counter = Arrays.Clone(J0);
+        //            this.counter32 = Pack.BE_To_UInt32(counter, 12);
+        //            this.blocksRemaining = uint.MaxValue - 1; // page 8, len(P) <= 2^39 - 256, 1 block used by tag
+        //            this.bufOff = 0;
+        //            this.totalLength = 0;
+
+        //            if (initialAssociatedText != null)
+        //            {
+        //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        //                ProcessAadBytes(initialAssociatedText);
+        //#else
+        //                ProcessAadBytes(initialAssociatedText, 0, initialAssociatedText.Length);
+        //#endif
+        //            }
+        //        }
+
         public void Init(bool forEncryption, ICipherParameters parameters)
         {
             this.forEncryption = forEncryption;
@@ -158,7 +307,10 @@ namespace Org.BouncyCastle.Crypto.Modes
             }
 
             int bufLength = forEncryption ? BlockSize : (BlockSize + macSize);
-            this.bufBlock = new byte[bufLength];
+            if(this.bufBlock==null || this.bufBlock.Length !=bufLength)
+                this.bufBlock = new byte[bufLength];
+            else
+                Array.Clear(this.bufBlock,0, this.bufBlock.Length);
 
             if (newNonce.Length < 1)
                 throw new ArgumentException("IV must be at least 1 byte");
@@ -180,13 +332,19 @@ namespace Org.BouncyCastle.Crypto.Modes
             }
 
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-            nonce = newNonce.ToArray();
+            if(nonce == null || nonce.Length != newNonce.Length)
+                nonce = new byte[newNonce.Length];
+            newNonce.CopyTo(nonce);
 #else
             nonce = newNonce;
 #endif
             if (keyParam != null)
             {
-                lastKey = keyParam.GetKey();
+                if(lastKey==null || lastKey.Length !=keyParam.KeyLength)
+                    lastKey = new byte[keyParam.KeyLength];
+
+                keyParam.CopyTo(lastKey,0,lastKey.Length);
+                //lastKey = keyParam.GetKey();
             }
 
             // TODO Restrict macSize to 16 if nonce length not 12?
@@ -221,7 +379,25 @@ namespace Org.BouncyCastle.Crypto.Modes
                 throw new ArgumentException("Key must be specified in initial Init");
             }
 
-            this.J0 = new byte[BlockSize];
+            if(this.J0 == null)
+                this.J0 = new byte[BlockSize];
+            if(this.S == null)
+                this.S = new byte[BlockSize];
+            if (this.S_at == null)
+                this.S_at = new byte[BlockSize];
+            if (this.S_atPre == null)
+                this.S_atPre = new byte[BlockSize];
+            if (this.atBlock == null)
+                this.atBlock = new byte[BlockSize];
+            if(this.counter == null)
+                this.counter = new byte[BlockSize];
+
+            Arrays.Clear(J0);
+            Arrays.Clear(S);
+            Arrays.Clear(S_at);
+            Arrays.Clear(S_atPre);
+            Arrays.Clear(atBlock);
+            Arrays.Clear(counter);
 
             if (nonce.Length == 12)
             {
@@ -231,19 +407,20 @@ namespace Org.BouncyCastle.Crypto.Modes
             else
             {
                 gHASH(J0, nonce, nonce.Length);
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                Span<byte> X = stackalloc byte[BlockSize];
+#else
                 byte[] X = new byte[BlockSize];
+#endif
                 Pack.UInt64_To_BE((ulong)nonce.Length * 8UL, X, 8);
                 gHASHBlock(J0, X);
             }
-
-            this.S = new byte[BlockSize];
-            this.S_at = new byte[BlockSize];
-            this.S_atPre = new byte[BlockSize];
-            this.atBlock = new byte[BlockSize];
+                     
             this.atBlockPos = 0;
             this.atLength = 0;
             this.atLengthPre = 0;
-            this.counter = Arrays.Clone(J0);
+            //this.counter = Arrays.Clone(J0);
+            Array.Copy(J0, counter, BlockSize);
             this.counter32 = Pack.BE_To_UInt32(counter, 12);
             this.blocksRemaining = uint.MaxValue - 1; // page 8, len(P) <= 2^39 - 256, 1 block used by tag
             this.bufOff = 0;
@@ -1051,14 +1228,19 @@ namespace Org.BouncyCastle.Crypto.Modes
         {
             // note: we do not reset the nonce.
 
-            S = new byte[BlockSize];
-            S_at = new byte[BlockSize];
-            S_atPre = new byte[BlockSize];
-            atBlock = new byte[BlockSize];
+            //S = new byte[BlockSize];
+            //S_at = new byte[BlockSize];
+            //S_atPre = new byte[BlockSize];
+            //atBlock = new byte[BlockSize];
+            Arrays.Clear(S);
+            Arrays.Clear(S_at);
+            Arrays.Clear(S_atPre);
+            Arrays.Clear(atBlock);
             atBlockPos = 0;
             atLength = 0;
             atLengthPre = 0;
-            counter = Arrays.Clone(J0);
+            //counter = Arrays.Clone(J0);
+            Array.Copy(J0, counter, J0.Length);
             counter32 = Pack.BE_To_UInt32(counter, 12);
             blocksRemaining = uint.MaxValue - 1;
             bufOff = 0;

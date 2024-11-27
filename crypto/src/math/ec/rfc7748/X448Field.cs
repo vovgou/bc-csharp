@@ -48,6 +48,7 @@ namespace Org.BouncyCastle.Math.EC.Rfc7748
         public static void Add(ReadOnlySpan<uint> x, ReadOnlySpan<uint> y, Span<uint> z)
         {
             int i = 0;
+#if NETCOREAPP2_1_OR_GREATER
             if (Vector.IsHardwareAccelerated)
             {
                 int limit = Size - Vector<uint>.Count;
@@ -59,6 +60,7 @@ namespace Org.BouncyCastle.Math.EC.Rfc7748
                     i += Vector<uint>.Count;
                 }
             }
+#endif
             {
                 while (i < Size)
                 {
@@ -69,7 +71,7 @@ namespace Org.BouncyCastle.Math.EC.Rfc7748
         }
 #endif
 
-        public static void AddOne(uint[] z)
+            public static void AddOne(uint[] z)
         {
             z[0] += 1;
         }

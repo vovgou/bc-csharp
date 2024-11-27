@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>net6.0;netstandard2.0;net461;netstandard2.1</TargetFrameworks>
     <RootNamespace>Org.BouncyCastle</RootNamespace>
     <AssemblyOriginatorKeyFile>..\..\BouncyCastle.NET.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -33,17 +33,7 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <!--Source-Level Debugging-->
-  <PropertyGroup>
-	<!-- Any custom target adding things to the Compile item group needs BeforeTargets="BeforeCompile".	-->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-    <!-- Tell SourceLink to use this remote to derive the published git repository URL and source links. -->
-    <GitRepositoryRemoteName>public</GitRepositoryRemoteName>
-
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
 
   <!--Package Validation-->
   <PropertyGroup>
